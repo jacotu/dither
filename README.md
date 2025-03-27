@@ -26,7 +26,7 @@
 
 ## Как использовать
 
-1. Откройте [Dither Tool](https://ваш-username.github.io/dither/tweakpane-dither.html)
+1. Откройте [+1 Dither Tool](https://jacotu.github.io/dither/)
 2. Нажмите "Загрузить изображение" для выбора файла
 3. Настройте параметры дизеринга в панели справа
 4. Нажмите "Сохранить PNG" для сохранения результата
@@ -35,7 +35,7 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/ваш-username/dither.git
+git clone https://github.com/jacotu/dither.git
 cd dither
 ```
 
@@ -46,7 +46,17 @@ python -m http.server 8000
 
 3. Откройте браузер и перейдите по адресу:
 ```
-http://localhost:8000/tweakpane-dither.html
+http://localhost:8000/
+```
+
+## Развертывание на GitHub Pages
+
+1. Создайте новый репозиторий на GitHub
+2. Загрузите файлы в репозиторий
+3. В настройках репозитория включите GitHub Pages
+4. Ваше приложение будет доступно по адресу:
+```
+https://jacotu.github.io/dither/
 ```
 
 ## Лицензия
