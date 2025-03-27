@@ -49,16 +49,6 @@ python -m http.server 8000
 http://localhost:8000/tweakpane-dither.html
 ```
 
-## Развертывание на GitHub Pages
-
-1. Создайте новый репозиторий на GitHub
-2. Загрузите файлы в репозиторий
-3. В настройках репозитория включите GitHub Pages
-4. Ваше приложение будет доступно по адресу:
-```
-https://ваш-username.github.io/dither/tweakpane-dither.html
-```
-
 ## Лицензия
 
 MIT 
