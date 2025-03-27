@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>DITHR Tool - Новая версия</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            background-color: #333;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            position: relative;
+        }
+        
+        .controls {
+            width: 250px;
+            background-color: #444;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        
+        button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            background-color: #2a5298;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #3a62a8;
+        }
+        
+        .slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-area" id="canvas-container">
+        <!-- Canvas будет добавлен сюда p5.js -->
+    </div>
+    
+    <div class="controls">
+        <h2>DITHR Tool</h2>
+        
+        <button id="uploadBtn">Загрузить изображение</button>
+        
+        <div>
+            <h3>Настройки</h3>
+            
+            <div>
+                <div class="slider-label">
+                    <span>Размер точек:</span>
+                    <span id="scaleValue">6.0</span>
+                </div>
+                <input type="range" id="scaleSlider" class="slider" min="1" max="20" step="0.5" value="6.0">
+            </div>
+            
+            <div>
+                <div class="slider-label">
+                    <span>Яркость:</span>
+                    <span id="brightnessValue">1.0</span>
+                </div>
+                <input type="range" id="brightnessSlider" class="slider" min="0" max="2" step="0.1" value="1.0">
+            </div>
+            
+            <div>
+                <div class="slider-label">
+                    <span>Контраст:</span>
+                    <span id="contrastValue">1.5</span>
+                </div>
+                <input type="range" id="contrastSlider" class="slider" min="0" max="3" step="0.1" value="1.5">
+            </div>
+            
+            <button id="applyBtn">Применить эффект</button>
+            <button id="saveBtn">Сохранить PNG</button>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let img;
+        let canvas;
+        
+        // Настройки дизеринга
+        const config = {
+            scale: 6.0,
+            brightness: 1.0,
+            contrast: 1.5
+        };
+        
+        // p5.js setup function - запускается один раз при старте
+        function setup() {
+            console.log("Setup начат");
+            
+            // Создаем canvas и помещаем его в контейнер
+            canvas = createCanvas(600, 600);
+            canvas.parent('canvas-container');
+            
+            // Загружаем инициализируем начальное изображение
+            createRandomImage();
+            
+            // Настраиваем события UI
+            setupUI();
+            
+            // Применяем начальный эффект
+            applyDither();
+            
+            console.log("Setup завершен");
+        }
+        
+        // Создаем случайное изображение для начальной демонстрации
+        function createRandomImage() {
+            img = createImage(width, height);
+            img.loadPixels();
+            for (let i = 0; i < img.width; i++) {
+                for (let j = 0; j < img.height; j++) {
+                    img.set(i, j, color(random(255), random(255), random(255)));
+                }
+            }
+            img.updatePixels();
+            console.log("Создано случайное изображение");
+        }
+        
+        // Настройка элементов управления
+        function setupUI() {
+            // Настраиваем слайдеры
+            document.getElementById('scaleSlider').addEventListener('input', function() {
+                config.scale = parseFloat(this.value);
+                document.getElementById('scaleValue').textContent = config.scale.toFixed(1);
+            });
+            
+            document.getElementById('brightnessSlider').addEventListener('input', function() {
+                config.brightness = parseFloat(this.value);
+                document.getElementById('brightnessValue').textContent = config.brightness.toFixed(1);
+            });
+            
+            document.getElementById('contrastSlider').addEventListener('input', function() {
+                config.contrast = parseFloat(this.value);
+                document.getElementById('contrastValue').textContent = config.contrast.toFixed(1);
+            });
+            
+            // Кнопка применения эффекта
+            document.getElementById('applyBtn').addEventListener('click', function() {
+                applyDither();
+            });
+            
+            // Кнопка сохранения
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                saveCanvas('dither_export', 'png');
+            });
+            
+            // Кнопка загрузки изображения
+            document.getElementById('uploadBtn').addEventListener('click', function() {
+                let input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = function(event) {
+                    let file = event.target.files[0];
+                    if(file) {
+                        let reader = new FileReader();
+                        reader.onload = function(e) {
+                            loadImage(e.target.result, function(loaded) {
+                                img = loaded;
+                                applyDither();
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+            });
+        }
+        
+        // Применение эффекта дизеринга
+        function applyDither() {
+            console.log("Применяем дизеринг с настройками:", config);
+            
+            background(255);
+            
+            // Сначала рисуем оригинальное изображение
+            image(img, 0, 0, width, height);
+            
+            // Настройки галфтона
+            let dotSize = config.scale;
+            let spacing = dotSize * 2;
+            
+            // Проходим по изображению с шагом spacing
+            for (let y = 0; y < height; y += spacing) {
+                for (let x = 0; x < width; x += spacing) {
+                    // Получаем цвет пикселя
+                    let c = get(x, y);
+                    
+                    // Извлекаем RGB компоненты и применяем яркость
+                    let r = red(c) / 255 * config.brightness;
+                    let g = green(c) / 255 * config.brightness;
+                    let b = blue(c) / 255 * config.brightness;
+                    
+                    // Применяем контраст
+                    r = (r - 0.5) * config.contrast + 0.5;
+                    g = (g - 0.5) * config.contrast + 0.5;
+                    b = (b - 0.5) * config.contrast + 0.5;
+                    
+                    // Ограничиваем значения от 0 до 1
+                    r = constrain(r, 0, 1);
+                    g = constrain(g, 0, 1);
+                    b = constrain(b, 0, 1);
+                    
+                    // Конвертируем в CMYK
+                    let k = 1 - Math.max(r, g, b);
+                    let c_val = (1 - r - k) / (1 - k + 0.0001);
+                    let m_val = (1 - g - k) / (1 - k + 0.0001);
+                    let y_val = (1 - b - k) / (1 - k + 0.0001);
+                    
+                    // Рисуем круги CMYK
+                    noStroke();
+                    
+                    // Cyan
+                    fill(0, 255, 255, c_val * 255);
+                    ellipse(x - dotSize/4, y - dotSize/4, dotSize * c_val, dotSize * c_val);
+                    
+                    // Magenta
+                    fill(255, 0, 255, m_val * 255);
+                    ellipse(x + dotSize/4, y - dotSize/4, dotSize * m_val, dotSize * m_val);
+                    
+                    // Yellow
+                    fill(255, 255, 0, y_val * 255);
+                    ellipse(x - dotSize/4, y + dotSize/4, dotSize * y_val, dotSize * y_val);
+                    
+                    // Black
+                    fill(0, 0, 0, k * 255);
+                    ellipse(x + dotSize/4, y + dotSize/4, dotSize * k, dotSize * k);
+                }
+            }
+        }
+        
+        // p5.js draw функция (не используется активно в этом приложении)
+        function draw() {
+            // Оставляем пустой, чтобы не перерисовывать холст постоянно
+        }
+    </script>
+</body>
+</html> 
